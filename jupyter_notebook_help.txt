@@ -1,0 +1,1071 @@
+Jupyter Notebook - A web-based notebook environment for interactive computing
+
+Options
+=======
+The options below are convenience aliases to configurable class-options,
+as listed in the "Equivalent to" description-line of the aliases.
+To see all configurable class-options for some <cmd>, use:
+    <cmd> --help-all
+
+--debug
+    Set debug level for the extension and underlying server applications.
+    Equivalent to: [--ServerApp.log_level=DEBUG --ExtensionApp.log_level=DEBUG]
+--show-config
+    Show the application's configuration (human-readable format)
+    Equivalent to: [--Application.show_config=True]
+--show-config-json
+    Show the application's configuration (json format)
+    Equivalent to: [--Application.show_config_json=True]
+--generate-config
+    generate default config file
+    Equivalent to: [--JupyterApp.generate_config=True]
+-y
+    Answer yes to any questions instead of prompting.
+    Equivalent to: [--JupyterApp.answer_yes=True]
+--allow-root
+    Allow the server to be run from root user.
+    Equivalent to: [--ServerApp.allow_root=True]
+--no-browser
+    Prevent the opening of the default url in the browser.
+    Equivalent to: [--ServerApp.open_browser=False --ExtensionApp.open_browser=False]
+--autoreload
+    Autoreload the webapp
+        Enable reloading of the tornado webapp and all imported Python packages
+        when any changes are made to any Python src files in server or
+        extensions.
+    Equivalent to: [--ServerApp.autoreload=True]
+--script
+    DEPRECATED, IGNORED
+    Equivalent to: [--FileContentsManager.save_script=True]
+--no-script
+    DEPRECATED, IGNORED
+    Equivalent to: [--FileContentsManager.save_script=False]
+--expose-app-in-browser
+    Expose the global app instance to browser via window.jupyterapp.
+    Equivalent to: [--JupyterNotebookApp.expose_app_in_browser=True]
+--custom-css
+    Load custom CSS in template html files. Default is True
+    Equivalent to: [--JupyterNotebookApp.custom_css=True]
+--log-level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+    Equivalent to: [--Application.log_level]
+--config=<Unicode>
+    Full path of a config file.
+    Default: ''
+    Equivalent to: [--JupyterApp.config_file]
+
+Class options
+=============
+The command-line option below sets the respective configurable class-parameter:
+    --Class.parameter=value
+This line is evaluated in Python, so simple expressions are allowed.
+For instance, to set `C.a=[0,1,2]`, you may type this:
+    --C.a='range(3)'
+
+Application(SingletonConfigurable) options
+------------------------------------------
+--Application.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--Application.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--Application.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--Application.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--Application.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--Application.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+
+JupyterApp(Application) options
+-------------------------------
+--JupyterApp.answer_yes=<Bool>
+    Answer yes to any prompts.
+    Default: False
+--JupyterApp.config_file=<Unicode>
+    Full path of a config file.
+    Default: ''
+--JupyterApp.config_file_name=<Unicode>
+    Specify a config file to load.
+    Default: ''
+--JupyterApp.generate_config=<Bool>
+    Generate default config file.
+    Default: False
+--JupyterApp.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--JupyterApp.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--JupyterApp.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--JupyterApp.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--JupyterApp.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--JupyterApp.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+
+ExtensionApp(JupyterApp) options
+--------------------------------
+--ExtensionApp.answer_yes=<Bool>
+    Answer yes to any prompts.
+    Default: False
+--ExtensionApp.config_file=<Unicode>
+    Full path of a config file.
+    Default: ''
+--ExtensionApp.config_file_name=<Unicode>
+    Specify a config file to load.
+    Default: ''
+--ExtensionApp.default_url=<Unicode>
+    Default: ''
+--ExtensionApp.generate_config=<Bool>
+    Generate default config file.
+    Default: False
+--ExtensionApp.handlers=<list-item-1>...
+    Handlers appended to the server.
+    Default: []
+--ExtensionApp.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--ExtensionApp.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--ExtensionApp.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--ExtensionApp.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--ExtensionApp.open_browser=<Bool>
+    Whether to open in a browser after starting.
+            The specific browser used is platform dependent and
+            determined by the python standard library `webbrowser`
+            module, unless it is overridden using the --browser
+            (ServerApp.browser) configuration option.
+    Default: False
+--ExtensionApp.settings=<key-1>=<value-1>...
+    Settings that will passed to the server.
+    Default: {}
+--ExtensionApp.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--ExtensionApp.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+--ExtensionApp.static_paths=<list-item-1>...
+    paths to search for serving static files.
+            This allows adding javascript/css to be available from the notebook server machine,
+            or overriding individual files in the IPython
+    Default: []
+--ExtensionApp.static_url_prefix=<Unicode>
+    Url where the static assets for the extension are served.
+    Default: ''
+--ExtensionApp.template_paths=<list-item-1>...
+    Paths to search for serving jinja templates.
+            Can be used to override templates from notebook.templates.
+    Default: []
+
+LabServerApp(ExtensionAppJinjaMixin, LabConfig, ExtensionApp) options
+---------------------------------------------------------------------
+--LabServerApp.allowed_extensions_uris=<Unicode>
+    "A list of comma-separated URIs to get the allowed extensions list
+    .. versionchanged:: 2.0.0
+        `LabServerApp.whitetlist_uris` renamed to `allowed_extensions_uris`
+    Default: ''
+--LabServerApp.answer_yes=<Bool>
+    Answer yes to any prompts.
+    Default: False
+--LabServerApp.app_settings_dir=<Unicode>
+    The application settings directory.
+    Default: ''
+--LabServerApp.app_url=<Unicode>
+    The url path for the application.
+    Default: '/lab'
+--LabServerApp.blacklist_uris=<Unicode>
+    Deprecated, use `LabServerApp.blocked_extensions_uris`
+    Default: ''
+--LabServerApp.blocked_extensions_uris=<Unicode>
+    A list of comma-separated URIs to get the blocked extensions list
+    .. versionchanged:: 2.0.0
+        `LabServerApp.blacklist_uris` renamed to `blocked_extensions_uris`
+    Default: ''
+--LabServerApp.cache_files=<Bool>
+    Whether to cache files on the server. This should be `True` except in dev
+    mode.
+    Default: True
+--LabServerApp.config_file=<Unicode>
+    Full path of a config file.
+    Default: ''
+--LabServerApp.config_file_name=<Unicode>
+    Specify a config file to load.
+    Default: ''
+--LabServerApp.copy_absolute_path=<Bool>
+    Whether getting a relative (False) or absolute (True) path when copying a
+    path.
+    Default: False
+--LabServerApp.extra_labextensions_path=<list-item-1>...
+    Extra paths to look for federated JupyterLab extensions
+    Default: []
+--LabServerApp.generate_config=<Bool>
+    Generate default config file.
+    Default: False
+--LabServerApp.handlers=<list-item-1>...
+    Handlers appended to the server.
+    Default: []
+--LabServerApp.jinja2_options=<key-1>=<value-1>...
+    Options to pass to the jinja2 environment for this
+    Default: {}
+--LabServerApp.labextensions_path=<list-item-1>...
+    The standard paths to look in for federated JupyterLab extensions
+    Default: []
+--LabServerApp.labextensions_url=<Unicode>
+    The url for federated JupyterLab extensions
+    Default: ''
+--LabServerApp.listings_refresh_seconds=<Int>
+    The interval delay in seconds to refresh the lists
+    Default: 3600
+--LabServerApp.listings_request_options=<key-1>=<value-1>...
+    The optional kwargs to use for the listings HTTP requests             as
+    described on https://2.python-requests.org/en/v2.7.0/api/#requests.request
+    Default: {}
+--LabServerApp.listings_url=<Unicode>
+    The listings url.
+    Default: ''
+--LabServerApp.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--LabServerApp.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--LabServerApp.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--LabServerApp.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--LabServerApp.notebook_starts_kernel=<Bool>
+    Whether a notebook should start a kernel automatically.
+    Default: True
+--LabServerApp.open_browser=<Bool>
+    Whether to open in a browser after starting.
+            The specific browser used is platform dependent and
+            determined by the python standard library `webbrowser`
+            module, unless it is overridden using the --browser
+            (ServerApp.browser) configuration option.
+    Default: False
+--LabServerApp.schemas_dir=<Unicode>
+    The optional location of the settings schemas directory. If given, a handler
+    will be added for settings.
+    Default: ''
+--LabServerApp.settings=<key-1>=<value-1>...
+    Settings that will passed to the server.
+    Default: {}
+--LabServerApp.settings_url=<Unicode>
+    The url path of the settings handler.
+    Default: ''
+--LabServerApp.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--LabServerApp.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+--LabServerApp.static_dir=<Unicode>
+    The optional location of local static files. If given, a static file handler
+    will be added.
+    Default: ''
+--LabServerApp.static_paths=<list-item-1>...
+    paths to search for serving static files.
+            This allows adding javascript/css to be available from the notebook server machine,
+            or overriding individual files in the IPython
+    Default: []
+--LabServerApp.static_url_prefix=<Unicode>
+    Url where the static assets for the extension are served.
+    Default: ''
+--LabServerApp.template_paths=<list-item-1>...
+    Paths to search for serving jinja templates.
+            Can be used to override templates from notebook.templates.
+    Default: []
+--LabServerApp.templates_dir=<Unicode>
+    The application templates directory.
+    Default: ''
+--LabServerApp.themes_dir=<Unicode>
+    The optional location of the themes directory. If given, a handler will be
+    added for themes.
+    Default: ''
+--LabServerApp.themes_url=<Unicode>
+    The theme url.
+    Default: ''
+--LabServerApp.translations_api_url=<Unicode>
+    The url path of the translations handler.
+    Default: ''
+--LabServerApp.tree_url=<Unicode>
+    The url path of the tree handler.
+    Default: ''
+--LabServerApp.user_settings_dir=<Unicode>
+    The optional location of the user settings directory.
+    Default: ''
+--LabServerApp.whitelist_uris=<Unicode>
+    Deprecated, use `LabServerApp.allowed_extensions_uris`
+    Default: ''
+--LabServerApp.workspaces_api_url=<Unicode>
+    The url path of the workspaces API.
+    Default: ''
+--LabServerApp.workspaces_dir=<Unicode>
+    The optional location of the saved workspaces directory. If given, a handler
+    will be added for workspaces.
+    Default: ''
+
+JupyterNotebookApp(NotebookConfigShimMixin, LabServerApp) options
+-----------------------------------------------------------------
+--JupyterNotebookApp.allowed_extensions_uris=<Unicode>
+    "A list of comma-separated URIs to get the allowed extensions list
+    .. versionchanged:: 2.0.0
+        `LabServerApp.whitetlist_uris` renamed to `allowed_extensions_uris`
+    Default: ''
+--JupyterNotebookApp.answer_yes=<Bool>
+    Answer yes to any prompts.
+    Default: False
+--JupyterNotebookApp.app_settings_dir=<Unicode>
+    The application settings directory.
+    Default: ''
+--JupyterNotebookApp.app_url=<Unicode>
+    The url path for the application.
+    Default: '/lab'
+--JupyterNotebookApp.blacklist_uris=<Unicode>
+    Deprecated, use `LabServerApp.blocked_extensions_uris`
+    Default: ''
+--JupyterNotebookApp.blocked_extensions_uris=<Unicode>
+    A list of comma-separated URIs to get the blocked extensions list
+    .. versionchanged:: 2.0.0
+        `LabServerApp.blacklist_uris` renamed to `blocked_extensions_uris`
+    Default: ''
+--JupyterNotebookApp.cache_files=<Bool>
+    Whether to cache files on the server. This should be `True` except in dev
+    mode.
+    Default: True
+--JupyterNotebookApp.config_file=<Unicode>
+    Full path of a config file.
+    Default: ''
+--JupyterNotebookApp.config_file_name=<Unicode>
+    Specify a config file to load.
+    Default: ''
+--JupyterNotebookApp.copy_absolute_path=<Bool>
+    Whether getting a relative (False) or absolute (True) path when copying a
+    path.
+    Default: False
+--JupyterNotebookApp.custom_css=<Bool>
+    Whether custom CSS is loaded on the page.
+            Defaults to True and custom CSS is loaded.
+    Default: True
+--JupyterNotebookApp.default_url=<Unicode>
+    The default URL to redirect to from `/`
+    Default: '/tree'
+--JupyterNotebookApp.expose_app_in_browser=<Bool>
+    Whether to expose the global app instance to browser via window.jupyterapp
+    Default: False
+--JupyterNotebookApp.extra_labextensions_path=<list-item-1>...
+    Extra paths to look for federated JupyterLab extensions
+    Default: []
+--JupyterNotebookApp.generate_config=<Bool>
+    Generate default config file.
+    Default: False
+--JupyterNotebookApp.handlers=<list-item-1>...
+    Handlers appended to the server.
+    Default: []
+--JupyterNotebookApp.jinja2_options=<key-1>=<value-1>...
+    Options to pass to the jinja2 environment for this
+    Default: {}
+--JupyterNotebookApp.labextensions_path=<list-item-1>...
+    The standard paths to look in for federated JupyterLab extensions
+    Default: []
+--JupyterNotebookApp.labextensions_url=<Unicode>
+    The url for federated JupyterLab extensions
+    Default: ''
+--JupyterNotebookApp.listings_refresh_seconds=<Int>
+    The interval delay in seconds to refresh the lists
+    Default: 3600
+--JupyterNotebookApp.listings_request_options=<key-1>=<value-1>...
+    The optional kwargs to use for the listings HTTP requests             as
+    described on https://2.python-requests.org/en/v2.7.0/api/#requests.request
+    Default: {}
+--JupyterNotebookApp.listings_url=<Unicode>
+    The listings url.
+    Default: ''
+--JupyterNotebookApp.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--JupyterNotebookApp.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--JupyterNotebookApp.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--JupyterNotebookApp.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--JupyterNotebookApp.notebook_starts_kernel=<Bool>
+    Whether a notebook should start a kernel automatically.
+    Default: True
+--JupyterNotebookApp.open_browser=<Bool>
+    Whether to open in a browser after starting.
+            The specific browser used is platform dependent and
+            determined by the python standard library `webbrowser`
+            module, unless it is overridden using the --browser
+            (ServerApp.browser) configuration option.
+    Default: False
+--JupyterNotebookApp.schemas_dir=<Unicode>
+    The optional location of the settings schemas directory. If given, a handler
+    will be added for settings.
+    Default: ''
+--JupyterNotebookApp.settings=<key-1>=<value-1>...
+    Settings that will passed to the server.
+    Default: {}
+--JupyterNotebookApp.settings_url=<Unicode>
+    The url path of the settings handler.
+    Default: ''
+--JupyterNotebookApp.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--JupyterNotebookApp.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+--JupyterNotebookApp.static_dir=<Unicode>
+    The optional location of local static files. If given, a static file handler
+    will be added.
+    Default: ''
+--JupyterNotebookApp.static_paths=<list-item-1>...
+    paths to search for serving static files.
+            This allows adding javascript/css to be available from the notebook server machine,
+            or overriding individual files in the IPython
+    Default: []
+--JupyterNotebookApp.static_url_prefix=<Unicode>
+    Url where the static assets for the extension are served.
+    Default: ''
+--JupyterNotebookApp.template_paths=<list-item-1>...
+    Paths to search for serving jinja templates.
+            Can be used to override templates from notebook.templates.
+    Default: []
+--JupyterNotebookApp.templates_dir=<Unicode>
+    The application templates directory.
+    Default: ''
+--JupyterNotebookApp.themes_dir=<Unicode>
+    The optional location of the themes directory. If given, a handler will be
+    added for themes.
+    Default: ''
+--JupyterNotebookApp.themes_url=<Unicode>
+    The theme url.
+    Default: ''
+--JupyterNotebookApp.translations_api_url=<Unicode>
+    The url path of the translations handler.
+    Default: ''
+--JupyterNotebookApp.tree_url=<Unicode>
+    The url path of the tree handler.
+    Default: ''
+--JupyterNotebookApp.user_settings_dir=<Unicode>
+    The optional location of the user settings directory.
+    Default: ''
+--JupyterNotebookApp.whitelist_uris=<Unicode>
+    Deprecated, use `LabServerApp.allowed_extensions_uris`
+    Default: ''
+--JupyterNotebookApp.workspaces_api_url=<Unicode>
+    The url path of the workspaces API.
+    Default: ''
+--JupyterNotebookApp.workspaces_dir=<Unicode>
+    The optional location of the saved workspaces directory. If given, a handler
+    will be added for workspaces.
+    Default: ''
+
+ServerApp(JupyterApp) options
+-----------------------------
+--ServerApp.allow_credentials=<Bool>
+    Set the Access-Control-Allow-Credentials: true header
+    Default: False
+--ServerApp.allow_external_kernels=<Bool>
+    Whether or not to allow external kernels, whose connection files are placed
+    in external_connection_dir.
+    Default: False
+--ServerApp.allow_origin=<Unicode>
+    Set the Access-Control-Allow-Origin header
+            Use '*' to allow any origin to access your server.
+            Takes precedence over allow_origin_pat.
+    Default: ''
+--ServerApp.allow_origin_pat=<Unicode>
+    Use a regular expression for the Access-Control-Allow-Origin header
+            Requests from an origin matching the expression will get replies
+    with:
+                Access-Control-Allow-Origin: origin
+            where `origin` is the origin of the request.
+            Ignored if allow_origin is set.
+    Default: ''
+--ServerApp.allow_password_change=<Bool>
+    DEPRECATED in 2.0. Use PasswordIdentityProvider.allow_password_change
+    Default: True
+--ServerApp.allow_remote_access=<Bool>
+    Allow requests where the Host header doesn't point to a local server
+           By default, requests get a 403 forbidden response if the 'Host' header
+           shows that the browser thinks it's on a non-local domain.
+           Setting this option to True disables this check.
+           This protects against 'DNS rebinding' attacks, where a remote web server
+           serves you a page and then changes its DNS to send later requests to a
+           local IP, bypassing same-origin checks.
+           Local IP addresses (such as 127.0.0.1 and ::1) are allowed as local,
+           along with hostnames configured in local_hostnames.
+    Default: False
+--ServerApp.allow_root=<Bool>
+    Whether to allow the user to run the server as root.
+    Default: False
+--ServerApp.answer_yes=<Bool>
+    Answer yes to any prompts.
+    Default: False
+--ServerApp.authenticate_prometheus=<Bool>
+    "
+            Require authentication to access prometheus metrics.
+    Default: True
+--ServerApp.authorizer_class=<Type>
+    The authorizer class to use.
+    Default: 'jupyter_server.auth.authorizer.AllowAllAuthorizer'
+--ServerApp.autoreload=<Bool>
+    Reload the webapp when changes are made to any Python src files.
+    Default: False
+--ServerApp.base_url=<Unicode>
+    The base URL for the Jupyter server.
+                           Leading and trailing slashes can be omitted,
+                           and will automatically be added.
+    Default: '/'
+--ServerApp.browser=<Unicode>
+    Specify what command to use to invoke a web
+                          browser when starting the server. If not specified, the
+                          default browser will be determined by the `webbrowser`
+                          standard library module, which allows setting of the
+                          BROWSER environment variable to override it.
+    Default: ''
+--ServerApp.certfile=<Unicode>
+    The full path to an SSL/TLS certificate file.
+    Default: ''
+--ServerApp.client_ca=<Unicode>
+    The full path to a certificate authority certificate for SSL/TLS client
+    authentication.
+    Default: ''
+--ServerApp.config_file=<Unicode>
+    Full path of a config file.
+    Default: ''
+--ServerApp.config_file_name=<Unicode>
+    Specify a config file to load.
+    Default: ''
+--ServerApp.config_manager_class=<Type>
+    The config manager class to use
+    Default: 'jupyter_server.services.config.manager.ConfigManager'
+--ServerApp.contents_manager_class=<Type>
+    The content manager class to use.
+    Default: 'jupyter_server.services.contents.largefilemanager.AsyncLarge...
+--ServerApp.cookie_options=<key-1>=<value-1>...
+    DEPRECATED. Use IdentityProvider.cookie_options
+    Default: {}
+--ServerApp.cookie_secret=<Bytes>
+    The random bytes used to secure cookies.
+            By default this is a new random number every time you start the server.
+            Set it to a value in a config file to enable logins to persist across server sessions.
+            Note: Cookie secrets should be kept private, do not share config files with
+            cookie_secret stored in plaintext (you can read the value from a file).
+    Default: b''
+--ServerApp.cookie_secret_file=<Unicode>
+    The file where the cookie secret is stored.
+    Default: ''
+--ServerApp.custom_display_url=<Unicode>
+    Override URL shown to users.
+            Replace actual URL, including protocol, address, port and base URL,
+            with the given value when displaying URL to the users. Do not change
+            the actual connection URL. If authentication token is enabled, the
+            token is added to the custom URL automatically.
+            This option is intended to be used when the URL to display to the user
+            cannot be determined reliably by the Jupyter server (proxified
+            or containerized setups for example).
+    Default: ''
+--ServerApp.default_url=<Unicode>
+    The default URL to redirect to from `/`
+    Default: '/'
+--ServerApp.disable_check_xsrf=<Bool>
+    Disable cross-site-request-forgery protection
+            Jupyter server includes protection from cross-site request forgeries,
+            requiring API requests to either:
+            - originate from pages served by this server (validated with XSRF cookie and token), or
+            - authenticate with a token
+            Some anonymous compute resources still desire the ability to run code,
+            completely without authentication.
+            These services can disable all authentication and security checks,
+            with the full knowledge of what that implies.
+    Default: False
+--ServerApp.external_connection_dir=<Unicode>
+    The directory to look at for external kernel connection files, if
+    allow_external_kernels is True. Defaults to Jupyter
+    runtime_dir/external_kernels. Make sure that this directory is not filled
+    with left-over connection files, that could result in unnecessary kernel
+    manager creations.
+    Default: None
+--ServerApp.extra_services=<list-item-1>...
+    handlers that should be loaded at higher priority than the default services
+    Default: []
+--ServerApp.extra_static_paths=<list-item-1>...
+    Extra paths to search for serving static files.
+            This allows adding javascript/css to be available from the Jupyter server machine,
+            or overriding individual files in the IPython
+    Default: []
+--ServerApp.extra_template_paths=<list-item-1>...
+    Extra paths to search for serving jinja templates.
+            Can be used to override templates from jupyter_server.templates.
+    Default: []
+--ServerApp.file_to_run=<Unicode>
+    Open the named file when the application is launched.
+    Default: ''
+--ServerApp.file_url_prefix=<Unicode>
+    The URL prefix where files are opened directly.
+    Default: 'notebooks'
+--ServerApp.generate_config=<Bool>
+    Generate default config file.
+    Default: False
+--ServerApp.get_secure_cookie_kwargs=<key-1>=<value-1>...
+    DEPRECATED. Use IdentityProvider.get_secure_cookie_kwargs
+    Default: {}
+--ServerApp.identity_provider_class=<Type>
+    The identity provider class to use.
+    Default: 'jupyter_server.auth.identity.PasswordIdentityProvider'
+--ServerApp.iopub_data_rate_limit=<Float>
+    DEPRECATED. Use ZMQChannelsWebsocketConnection.iopub_data_rate_limit
+    Default: 0.0
+--ServerApp.iopub_msg_rate_limit=<Float>
+    DEPRECATED. Use ZMQChannelsWebsocketConnection.iopub_msg_rate_limit
+    Default: 0.0
+--ServerApp.ip=<Unicode>
+    The IP address the Jupyter server will listen on.
+    Default: 'localhost'
+--ServerApp.jinja_environment_options=<key-1>=<value-1>...
+    Supply extra arguments that will be passed to Jinja environment.
+    Default: {}
+--ServerApp.jinja_template_vars=<key-1>=<value-1>...
+    Extra variables to supply to jinja templates when rendering.
+    Default: {}
+--ServerApp.jpserver_extensions=<key-1>=<value-1>...
+    Dict of Python modules to load as Jupyter server extensions.Entry values can
+    be used to enable and disable the loading ofthe extensions. The extensions
+    will be loaded in alphabetical order.
+    Default: {}
+--ServerApp.kernel_manager_class=<Type>
+    The kernel manager class to use.
+    Default: 'jupyter_server.services.kernels.kernelmanager.MappingKernelM...
+--ServerApp.kernel_spec_manager_class=<Type>
+    The kernel spec manager class to use. Should be a subclass of
+    `jupyter_client.kernelspec.KernelSpecManager`.
+    The Api of KernelSpecManager is provisional and might change without warning
+    between this version of Jupyter and the next stable one.
+    Default: 'builtins.object'
+--ServerApp.kernel_websocket_connection_class=<Type>
+    The kernel websocket connection class to use.
+    Default: 'jupyter_server.services.kernels.connection.base.BaseKernelWe...
+--ServerApp.kernel_ws_protocol=<Unicode>
+    DEPRECATED. Use ZMQChannelsWebsocketConnection.kernel_ws_protocol
+    Default: ''
+--ServerApp.keyfile=<Unicode>
+    The full path to a private key file for usage with SSL/TLS.
+    Default: ''
+--ServerApp.limit_rate=<Bool>
+    DEPRECATED. Use ZMQChannelsWebsocketConnection.limit_rate
+    Default: False
+--ServerApp.local_hostnames=<list-item-1>...
+    Hostnames to allow as local when allow_remote_access is False.
+           Local IP addresses (such as 127.0.0.1 and ::1) are automatically accepted
+           as local as well.
+    Default: ['localhost']
+--ServerApp.log_datefmt=<Unicode>
+    The date format used by logging formatters for %(asctime)s
+    Default: '%Y-%m-%d %H:%M:%S'
+--ServerApp.log_format=<Unicode>
+    The Logging format template
+    Default: '[%(name)s]%(highlevel)s %(message)s'
+--ServerApp.log_level=<Enum>
+    Set the log level by value or name.
+    Choices: any of [0, 10, 20, 30, 40, 50, 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL']
+    Default: 30
+--ServerApp.logging_config=<key-1>=<value-1>...
+    Configure additional log handlers.
+    The default stderr logs handler is configured by the log_level, log_datefmt
+    and log_format settings.
+    This configuration can be used to configure additional handlers (e.g. to
+    output the log to a file) or for finer control over the default handlers.
+    If provided this should be a logging configuration dictionary, for more
+    information see:
+    https://docs.python.org/3/library/logging.config.html#logging-config-
+    dictschema
+    This dictionary is merged with the base logging configuration which defines
+    the following:
+    * A logging formatter intended for interactive use called
+      ``console``.
+    * A logging handler that writes to stderr called
+      ``console`` which uses the formatter ``console``.
+    * A logger with the name of this application set to ``DEBUG``
+      level.
+    This example adds a new handler that writes to a file:
+    .. code-block:: python
+       c.Application.logging_config = {
+           'handlers': {
+               'file': {
+                   'class': 'logging.FileHandler',
+                   'level': 'DEBUG',
+                   'filename': '<path/to/file>',
+               }
+           },
+           'loggers': {
+               '<application-name>': {
+                   'level': 'DEBUG',
+                   # NOTE: if you don't list the default "console"
+                   # handler here then it will be disabled
+                   'handlers': ['console', 'file'],
+               },
+           }
+       }
+    Default: {}
+--ServerApp.login_handler_class=<Type>
+    The login handler class to use.
+    Default: 'jupyter_server.auth.login.LegacyLoginHandler'
+--ServerApp.logout_handler_class=<Type>
+    The logout handler class to use.
+    Default: 'jupyter_server.auth.logout.LogoutHandler'
+--ServerApp.max_body_size=<Int>
+    Sets the maximum allowed size of the client request body, specified in the
+    Content-Length request header field. If the size in a request exceeds the
+    configured value, a malformed HTTP message is returned to the client.
+    Note: max_body_size is applied even in streaming mode.
+    Default: 536870912
+--ServerApp.max_buffer_size=<Int>
+    Gets or sets the maximum amount of memory, in bytes, that is allocated for
+    use by the buffer manager.
+    Default: 536870912
+--ServerApp.min_open_files_limit=<Int>
+    Gets or sets a lower bound on the open file handles process resource limit.
+    This may need to be increased if you run into an OSError: [Errno 24] Too
+    many open files. This is not applicable when running on Windows.
+    Default: 0
+--ServerApp.notebook_dir=<Unicode>
+    DEPRECATED, use root_dir.
+    Default: ''
+--ServerApp.open_browser=<Bool>
+    Whether to open in a browser after starting.
+                            The specific browser used is platform dependent and
+                            determined by the python standard library `webbrowser`
+                            module, unless it is overridden using the --browser
+                            (ServerApp.browser) configuration option.
+    Default: False
+--ServerApp.password=<Unicode>
+    DEPRECATED in 2.0. Use PasswordIdentityProvider.hashed_password
+    Default: ''
+--ServerApp.password_required=<Bool>
+    DEPRECATED in 2.0. Use PasswordIdentityProvider.password_required
+    Default: False
+--ServerApp.port=<Int>
+    The port the server will listen on (env: JUPYTER_PORT).
+    Default: 0
+--ServerApp.port_retries=<Int>
+    The number of additional ports to try if the specified port is not available
+    (env: JUPYTER_PORT_RETRIES).
+    Default: 50
+--ServerApp.preferred_dir=<Unicode>
+    Preferred starting directory to use for notebooks and kernels.
+    Default: ''
+--ServerApp.pylab=<Unicode>
+    DISABLED: use %pylab or %matplotlib in the notebook to enable matplotlib.
+    Default: 'disabled'
+--ServerApp.quit_button=<Bool>
+    If True, display controls to shut down the Jupyter server, such as menu
+    items or buttons.
+    Default: True
+--ServerApp.rate_limit_window=<Float>
+    DEPRECATED. Use ZMQChannelsWebsocketConnection.rate_limit_window
+    Default: 0.0
+--ServerApp.reraise_server_extension_failures=<Bool>
+    Reraise exceptions encountered loading server extensions?
+    Default: False
+--ServerApp.root_dir=<Unicode>
+    The directory to use for notebooks and kernels.
+    Default: ''
+--ServerApp.session_manager_class=<Type>
+    The session manager class to use.
+    Default: 'builtins.object'
+--ServerApp.show_config=<Bool>
+    Instead of starting the Application, dump configuration to stdout
+    Default: False
+--ServerApp.show_config_json=<Bool>
+    Instead of starting the Application, dump configuration to stdout (as JSON)
+    Default: False
+--ServerApp.shutdown_no_activity_timeout=<Int>
+    Shut down the server after N seconds with no kernelsrunning and no activity.
+    This can be used together with culling idle kernels
+    (MappingKernelManager.cull_idle_timeout) to shutdown the Jupyter server when
+    it's not in use. This is not precisely timed: it may shut down up to a
+    minute later. 0 (the default) disables this automatic shutdown.
+    Default: 0
+--ServerApp.sock=<Unicode>
+    The UNIX socket the Jupyter server will listen on.
+    Default: ''
+--ServerApp.sock_mode=<Unicode>
+    The permissions mode for UNIX socket creation (default: 0600).
+    Default: '0600'
+--ServerApp.ssl_options=<key-1>=<value-1>...
+    Supply SSL options for the tornado HTTPServer.
+                See the tornado docs for details.
+    Default: {}
+--ServerApp.static_immutable_cache=<list-item-1>...
+    Paths to set up static files as immutable.
+    This allow setting up the cache control of static files as immutable. It
+    should be used for static file named with a hash for instance.
+    Default: []
+--ServerApp.terminado_settings=<key-1>=<value-1>...
+    Supply overrides for terminado. Currently only supports "shell_command".
+    Default: {}
+--ServerApp.terminals_enabled=<Bool>
+    Set to False to disable terminals.
+             This does *not* make the server more secure by itself.
+             Anything the user can in a terminal, they can also do in a notebook.
+             Terminals may also be automatically disabled if the terminado package
+             is not available.
+    Default: False
+--ServerApp.token=<Unicode>
+    DEPRECATED. Use IdentityProvider.token
+    Default: '<DEPRECATED>'
+--ServerApp.tornado_settings=<key-1>=<value-1>...
+    Supply overrides for the tornado.web.Application that the Jupyter server
+    uses.
+    Default: {}
+--ServerApp.trust_xheaders=<Bool>
+    Whether to trust or not X-Scheme/X-Forwarded-Proto and X-Real-
+    Ip/X-Forwarded-For headerssent by the upstream reverse proxy. Necessary if
+    the proxy handles SSL
+    Default: False
+--ServerApp.use_redirect_file=<Bool>
+    Disable launching browser by redirect file
+         For versions of notebook > 5.7.2, a security feature measure was added that
+         prevented the authentication token used to launch the browser from being visible.
+         This feature makes it difficult for other users on a multi-user system from
+         running code in your Jupyter session as you.
+         However, some environments (like Windows Subsystem for Linux (WSL) and Chromebooks),
+         launching a browser using a redirect file can lead the browser failing to load.
+         This is because of the difference in file structures/paths between the runtime and
+         the browser.
+         Disabling this setting to False will disable this behavior, allowing the browser
+         to launch by using a URL and visible token (as before).
+    Default: True
+--ServerApp.webbrowser_open_new=<Int>
+    Specify where to open the server on startup. This is the
+            `new` argument passed to the standard library method `webbrowser.open`.
+            The behaviour is not guaranteed, but depends on browser support. Valid
+            values are:
+             - 2 opens a new tab,
+             - 1 opens a new window,
+             - 0 opens in an existing window.
+            See the `webbrowser.open` documentation for details.
+    Default: 2
+--ServerApp.websocket_compression_options=<Any>
+    Set the tornado compression options for websocket connections.
+    This value will be returned from
+    :meth:`WebSocketHandler.get_compression_options`. None (default) will
+    disable compression. A dict (even an empty one) will enable compression.
+    See the tornado docs for WebSocketHandler.get_compression_options for
+    details.
+    Default: None
+--ServerApp.websocket_url=<Unicode>
+    The base URL for websockets,
+            if it differs from the HTTP server (hint: it almost certainly doesn't).
+            Should be in the form of an HTTP origin: ws[s]://hostname[:port]
+    Default: ''
+
