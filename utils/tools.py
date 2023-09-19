@@ -93,8 +93,12 @@ def eigval_radius(points: np.ndarray, radius: float):
             eigvals_matrix = np.concatenate((eigvals_matrix, np.array([0.0, 0.0, 0.0])[np.newaxis, :]), axis=0)
             continue
         eigvals, _ = pca_k(points[neighbour_indicies], 3)
-        eigvals = eigvals.reshape(-1, 3)
-        eigvals_matrix = np.concatenate((eigvals_matrix, eigvals), axis=0)
+        assert eigvals[0] >= eigvals[1] and eigvals[1] >= eigvals[2]
+        eigvals_matrix = np.concatenate((eigvals_matrix, np.array([
+            (eigvals[0] + 1.0) / (eigvals[1] + 1.0),
+            (eigvals[0] + 1.0) / (eigvals[2] + 1.0),
+            (eigvals[1] + 1.0) / (eigvals[2] + 1.0)
+        ]).reshape(-1, 3)), axis=0)
     
     return eigvals_matrix, neighbour_num_record
 
@@ -182,6 +186,42 @@ def pca_k(data: np.ndarray, k: int):
     eigvecs = eigvecs[:, sorted_indices]
     
     return eigvals[:k], eigvecs[:, :k]
+
+def cluster_instanced(points: np.ndarray, border_len: float, min_threshold: int):
+    '''
+    This function clusters the seperated points mainly based on vertical feature,
+    with a pre-filtration test to avoid false positive points retained.
+
+    Params:
+    -
+    * points (np.ndarray) - [n, 3] coordinates
+    * border_len (float) - the length of the squre border
+    * min_threshold (int) - minimum number of the selected points to be recognized as a cluster
+
+    Returns:
+    -
+    * instanced_labels (np.array) - instantiation labels in [n, ] np.array
+    '''
+    instanced_labels = np.zeros((len(points), ), dtype=np.int32)
+    instanced_counts = 1
+    for idx, query in enumerate(points):
+        if instanced_labels[idx] > 0:
+            # skip the labeled point
+            continue
+
+        pre_square_selection_mask = \
+            (abs(points[:, 0] - query[0]) < border_len / 15.0) & \
+            (abs(points[:, 1] - query[1]) < border_len / 15.0)
+        if pre_square_selection_mask.astype(np.int32).sum() < (min_threshold // 15):
+            continue
+
+        square_selection_mask = \
+            (abs(points[:, 0] - query[0]) < border_len) & \
+            (abs(points[:, 1] - query[1]) < border_len)
+        if square_selection_mask.astype(np.int32).sum() >= min_threshold and instanced_labels[square_selection_mask].sum() == 0:
+            instanced_labels[square_selection_mask] = instanced_counts
+            instanced_counts += 1
+    return instanced_labels
 
 # some commonly used conversions
 def npy2o3d(data: np.ndarray):
