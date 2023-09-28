@@ -122,7 +122,7 @@ def my_cos(vec1: np.array, vec2: np.array):
 
     return cos_val
 
-def eigval_vertic(points: np.ndarray, radius: float):
+def eigval_vertic(points: np.ndarray, border: float):
     '''
     compute eigen values of all points given the neighbourhood
     radius.
@@ -145,7 +145,7 @@ def eigval_vertic(points: np.ndarray, radius: float):
 
     global_max_heigh = np.max(points[:, 2])
     for query in tqdm(points, desc="eigval progress", total=points.shape[0], ncols=100):
-        square_neighbours_mask = (np.abs(points[:, 0] - query[0]) < radius) & (np.abs(points[:, 1] - query[1]) < radius)
+        square_neighbours_mask = (np.abs(points[:, 0] - query[0]) < border) & (np.abs(points[:, 1] - query[1]) < border)
         square_neighbours = points[square_neighbours_mask]
         square_neighbours_num = len(square_neighbours) - 1
         neighbour_num_record.append(len(square_neighbours))
