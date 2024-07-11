@@ -80,27 +80,28 @@ def eigval_radius(points: np.ndarray, radius: float):
     * np.ndarray - [n, 3] eigen values of all points
     '''
     from tqdm import tqdm
+    
+    assert len(points) > 0
     # construct kd-tree to search
-    o3d_pcd = npy2o3d(points)
-    search_tree = o3d.geometry.KDTreeFlann(o3d_pcd)
+    search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
 
-    eigvals_matrix = np.zeros((0, 3), dtype=np.float32)
+    eigval_list = np.zeros((0, 3), dtype=np.float32)
     neighbour_num_record = []
-    for query in tqdm(points, desc="eigval progress", total=points.shape[0], ncols=100):
+    for query in tqdm(points, desc="eigval progress", total=len(points), ncols=100):
         neighbour_num, neighbour_indicies, _ = search_tree.search_radius_vector_3d(query, radius)
         neighbour_num_record.append(neighbour_num - 1)
         if neighbour_num < 3:
-            eigvals_matrix = np.concatenate((eigvals_matrix, np.array([0.0, 0.0, 0.0])[np.newaxis, :]), axis=0)
+            eigval_list = np.concatenate((eigval_list, np.array([0.0, 0.0, 0.0])[np.newaxis, :]), axis=0)
             continue
         eigvals, _ = pca_k(points[neighbour_indicies], 3)
         assert eigvals[0] >= eigvals[1] and eigvals[1] >= eigvals[2]
-        eigvals_matrix = np.concatenate((eigvals_matrix, np.array([
-            (eigvals[0] + 1.0) / (eigvals[1] + 1.0),
-            (eigvals[0] + 1.0) / (eigvals[2] + 1.0),
-            (eigvals[1] + 1.0) / (eigvals[2] + 1.0)
+        eigval_list = np.concatenate((eigval_list, np.array([
+            (eigvals[0] + 1e-3) / (eigvals[1] + 1e-3),
+            (eigvals[0] + 1e-3) / (eigvals[2] + 1e-3),
+            (eigvals[1] + 1e-3) / (eigvals[2] + 1e-3)
         ]).reshape(-1, 3)), axis=0)
     
-    return eigvals_matrix, neighbour_num_record
+    return eigval_list, neighbour_num_record
 
 def my_sin(vec1: np.array, vec2: np.array):
     cross_product = np.cross(vec1, vec2)

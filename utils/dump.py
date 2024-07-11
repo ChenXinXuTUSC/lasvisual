@@ -34,7 +34,7 @@ def npy2ply(points, colors, file_path, use_txt=False):
     vertex_data = None
     vertex_dtyp = None
 
-    if colors is not None:
+    if colors is not None and len(points) == len(colors):
         vertex_data = [tuple(pt) + tuple(cl) for pt, cl in zip(points, colors)]
         vertex_dtyp = [
             ("x", "f8"),
