@@ -131,7 +131,7 @@ def eigval_radius(points:np.ndarray, be_range: tuple, radius: float):
         eigval_list = np.concatenate((eigval_list, np.array([
             (eigvals[0] - eigvals[1]) / (eigvals[0] + 1e-9),
             (eigvals[1] - eigvals[2]) / (eigvals[1] + 1e-9),
-            0
+            (eigvals[0] - eigvals[2]) / (eigvals[0] + 1e-9),
         ]).reshape(-1, 3)), axis=0)
     
     return eigval_list, neighbour_num_record
