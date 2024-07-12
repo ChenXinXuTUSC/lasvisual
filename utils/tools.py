@@ -1,6 +1,33 @@
 import numpy as np
 import open3d as o3d
 
+def my_sin(vec1: np.array, vec2: np.array):
+    cross_product = np.cross(vec1, vec2)
+    norm_cross_product = np.linalg.norm(cross_product)
+    norm_vec1 = np.linalg.norm(vec1)
+    norm_vec2 = np.linalg.norm(vec2)
+
+    sin_val = norm_cross_product / (norm_vec1 * norm_vec2)
+
+    return sin_val
+
+def my_cos(vec1: np.array, vec2: np.array):
+    dot_product = np.dot(vec1, vec2)
+    norm_dot_product = np.linalg.norm(dot_product)
+    norm_vec1 = np.linalg.norm(vec1)
+    norm_vec2 = np.linalg.norm(vec2)
+
+    cos_val = norm_dot_product / (norm_vec1 * norm_vec2)
+
+    return cos_val
+
+def variance(seq: list):
+    n = len(seq)
+    assert n > 0, "sequence length must be positive"
+    mean = sum(seq) / n
+    var = sum((x - mean)**2 for x in seq) / n
+    return var
+
 def voxel_downsample(points: np.ndarray, voxel_size: float, use_avg: bool):
     '''
     Conduct a downsample with the given voxel size
@@ -64,7 +91,7 @@ def get_average_pivot(data):
         avg_next = (np.mean(data[data < avg_curr]) + np.mean(data[data > avg_curr])) / 2.0
     return avg_curr
 
-def eigval_radius(points: np.ndarray, radius: float):
+def eigval_radius(points:np.ndarray, be_range: tuple, radius: float):
     '''
     compute eigen values of all points given the neighbourhood
     radius.
@@ -72,6 +99,7 @@ def eigval_radius(points: np.ndarray, radius: float):
     Params:
     -
     * points (np.ndarray) - [n, 3] np.ndarray coordinates.
+    * be_range (tuple[int]) - (2) [start, end)
     * radius (float) - radius for computing  eigen  values  of
         each point.
 
@@ -82,48 +110,33 @@ def eigval_radius(points: np.ndarray, radius: float):
     from tqdm import tqdm
     
     assert len(points) > 0
+    assert len(be_range) == 2
+    assert be_range[0] < be_range[1]
+    
     # construct kd-tree to search
-    search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
+    pcd = npy2o3d(points)
+    search_tree = o3d.geometry.KDTreeFlann(pcd)
 
     eigval_list = np.zeros((0, 3), dtype=np.float32)
     neighbour_num_record = []
-    for query in tqdm(points, desc="eigval progress", total=len(points), ncols=100):
+    for query_idx in tqdm(range(be_range[0], be_range[1]), desc="eigval progress", total=be_range[1] - be_range[0], ncols=100):
+        query = pcd.points[query_idx]
         neighbour_num, neighbour_indicies, _ = search_tree.search_radius_vector_3d(query, radius)
         neighbour_num_record.append(neighbour_num - 1)
         if neighbour_num < 3:
             eigval_list = np.concatenate((eigval_list, np.array([0.0, 0.0, 0.0])[np.newaxis, :]), axis=0)
             continue
-        eigvals, _ = pca_k(points[neighbour_indicies], 3)
+        eigvals, eigvecs = pca_k(points[neighbour_indicies], 3)
         assert eigvals[0] >= eigvals[1] and eigvals[1] >= eigvals[2]
         eigval_list = np.concatenate((eigval_list, np.array([
-            (eigvals[0] + 1e-3) / (eigvals[1] + 1e-3),
-            (eigvals[0] + 1e-3) / (eigvals[2] + 1e-3),
-            (eigvals[1] + 1e-3) / (eigvals[2] + 1e-3)
+            (eigvals[0] - eigvals[1]) / (eigvals[0] + 1e-9),
+            (eigvals[1] - eigvals[2]) / (eigvals[1] + 1e-9),
+            0
         ]).reshape(-1, 3)), axis=0)
     
     return eigval_list, neighbour_num_record
 
-def my_sin(vec1: np.array, vec2: np.array):
-    cross_product = np.cross(vec1, vec2)
-    norm_cross_product = np.linalg.norm(cross_product)
-    norm_vec1 = np.linalg.norm(vec1)
-    norm_vec2 = np.linalg.norm(vec2)
-
-    sin_val = norm_cross_product / (norm_vec1 * norm_vec2)
-
-    return sin_val
-
-def my_cos(vec1: np.array, vec2: np.array):
-    dot_product = np.dot(vec1, vec2)
-    norm_dot_product = np.linalg.norm(dot_product)
-    norm_vec1 = np.linalg.norm(vec1)
-    norm_vec2 = np.linalg.norm(vec2)
-
-    cos_val = norm_dot_product / (norm_vec1 * norm_vec2)
-
-    return cos_val
-
-def eigval_vertic(points: np.ndarray, border: float):
+def eigval_vertic(points: np.ndarray, be_range: tuple, border: float):
     '''
     compute eigen values of all points given the neighbourhood
     radius.
@@ -131,6 +144,7 @@ def eigval_vertic(points: np.ndarray, border: float):
     Params:
     -
     * points (np.ndarray) - [n, 3] np.ndarray coordinates.
+    * be_range (tuple[int]) - (2) [start, end)
     * radius (float) - radius for computing  eigen  values  of
         each point.
 
@@ -144,8 +158,9 @@ def eigval_vertic(points: np.ndarray, border: float):
     feat_matrix = np.zeros((0, 3), dtype=np.float32)
     neighbour_num_record = []
 
-    global_max_heigh = np.max(points[:, 2])
-    for query in tqdm(points, desc="eigval progress", total=points.shape[0], ncols=100):
+    global_max_height = np.max(points[:, 2])
+    for query_idx in tqdm(range(be_range[0], be_range[1]), desc="eigval progress", total=be_range[1]-be_range[0], ncols=100):
+        query = points[query_idx]
         square_neighbours_mask = (np.abs(points[:, 0] - query[0]) < border) & (np.abs(points[:, 1] - query[1]) < border)
         square_neighbours = points[square_neighbours_mask]
         square_neighbours_num = len(square_neighbours) - 1
@@ -157,9 +172,9 @@ def eigval_vertic(points: np.ndarray, border: float):
         local_max_height = np.max(square_neighbours[:, 2])
         _, eigvecs = pca_k(square_neighbours, 3)
         feat = np.array([
-            my_cos(eigvecs[:, 0], np.array([0, 0, 1])), # 第一主轴方向与垂直方向夹角特征
-            local_max_height / global_max_heigh,
-            my_sin(eigvecs[:, 0], np.array([0, 0, 1]))  # 第一主轴方向与垂直方向夹角特征
+            my_cos(eigvecs[:, 0], np.array([0, 0, 1])), # angle feat between eig1 and (0,0,1)
+            my_cos(eigvecs[:, 1], np.array([0, 0, 1])), # angle feat between eig2 and (0,0,1)
+            my_cos(eigvecs[:, 2], np.array([0, 0, 1]))  # angle feat between eig3 and (0,0,1)
         ]).reshape(-1, 3)
         feat_matrix = np.concatenate((feat_matrix, feat), axis=0)
     
