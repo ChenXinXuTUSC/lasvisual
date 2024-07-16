@@ -1,17 +1,10 @@
 import numpy as np
 import open3d as o3d
 
-def my_sin(vec1: np.array, vec2: np.array):
-    cross_product = np.cross(vec1, vec2)
-    norm_cross_product = np.linalg.norm(cross_product)
-    norm_vec1 = np.linalg.norm(vec1)
-    norm_vec2 = np.linalg.norm(vec2)
-
-    sin_val = norm_cross_product / (norm_vec1 * norm_vec2)
-
-    return sin_val
-
-def my_cos(vec1: np.array, vec2: np.array):
+def cos(vec1: np.ndarray, vec2: np.ndarray):
+    '''
+    compute the cosine angle of two vector list
+    '''
     dot_product = np.dot(vec1, vec2)
     norm_dot_product = np.linalg.norm(dot_product)
     norm_vec1 = np.linalg.norm(vec1)
@@ -20,6 +13,56 @@ def my_cos(vec1: np.array, vec2: np.array):
     cos_val = norm_dot_product / (norm_vec1 * norm_vec2)
 
     return cos_val
+
+def sin(vec1: np.ndarray, vec2: np.ndarray):
+    # cross_product = np.cross(vec1, vec2)
+    # norm_cross_product = np.linalg.norm(cross_product)
+    # norm_vec1 = np.linalg.norm(vec1)
+    # norm_vec2 = np.linalg.norm(vec2)
+
+    # sin_val = norm_cross_product / (norm_vec1 * norm_vec2)
+
+    return np.sqrt(1-cos(vec1, vec2)**2) # sin^2 + cos^2 = 1
+
+def cos_batch(bat1: np.ndarray, bat2: np.ndarray):
+    '''
+    compute the cos value of each vector between
+    a and b.
+    
+    params:
+    -
+    * a (np.ndarray) - [n, c] vector list
+    * b (np.ndarray) - [m, c] vector list
+    
+    return:
+    -
+    * [n, m] cos value matrix for each pair
+    '''
+    assert len(bat1.shape) <= 2 and len(bat2.shape) <= 2, "shape of a or b nor supported"
+    
+    num_ch_1 = 0
+    if len(bat1.shape) == 2:
+        num_ch_1 = bat1.shape[1]
+    else:
+        num_ch_1 = bat1.shape[0]
+    
+    num_ch_2 = 0
+    if len(bat2.shape) == 2:
+        num_ch_2 = bat2.shape[1]
+    else:
+        num_ch_2 = bat2.shape[0]
+    
+    assert num_ch_1 == num_ch_1, "mismatched vector dimension"
+    
+    num_ch = num_ch_1 = num_ch_2
+    
+    bat1 = bat1.reshape(-1, num_ch)
+    bat2 = bat2.reshape(-1, num_ch)
+    
+    res_dot = np.dot(bat1, bat2.T)
+    res_nml = np.linalg.norm(bat1, axis=1).reshape(1, -1).T @ np.linalg.norm(bat2, axis=1).reshape(1, -1)
+    assert np.all(res_nml > 0)
+    return res_dot / res_nml
 
 def variance(seq: list):
     n = len(seq)
@@ -155,30 +198,60 @@ def eigval_vertic(points: np.ndarray, be_range: tuple, border: float):
 
     from tqdm import tqdm
 
-    feat_matrix = np.zeros((0, 3), dtype=np.float32)
+    feat_list = []
     neighbour_num_record = []
 
-    global_max_height = np.max(points[:, 2])
     for query_idx in tqdm(range(be_range[0], be_range[1]), desc="eigval progress", total=be_range[1]-be_range[0], ncols=100):
         query = points[query_idx]
         square_neighbours_mask = (np.abs(points[:, 0] - query[0]) < border) & (np.abs(points[:, 1] - query[1]) < border)
         square_neighbours = points[square_neighbours_mask]
         square_neighbours_num = len(square_neighbours) - 1
-        neighbour_num_record.append(len(square_neighbours))
+        neighbour_num_record.append(square_neighbours_num - 1)
         if square_neighbours_num < 3:
-            feat_matrix = np.concatenate((feat_matrix, np.array([0.0, 0.0, 0.0])[np.newaxis, :]), axis=0)
+            feat_list.append(np.array([0.0, 0.0, 0.0]))
             continue
 
         local_max_height = np.max(square_neighbours[:, 2])
         _, eigvecs = pca_k(square_neighbours, 3)
-        feat = np.array([
-            my_cos(eigvecs[:, 0], np.array([0, 0, 1])), # angle feat between eig1 and (0,0,1)
-            my_cos(eigvecs[:, 1], np.array([0, 0, 1])), # angle feat between eig2 and (0,0,1)
-            my_cos(eigvecs[:, 2], np.array([0, 0, 1]))  # angle feat between eig3 and (0,0,1)
-        ]).reshape(-1, 3)
-        feat_matrix = np.concatenate((feat_matrix, feat), axis=0)
+        feat = [
+            cos(eigvecs[:, 0], np.array([0, 0, 1])), # angle feat between eig1 and (0,0,1)
+            cos(eigvecs[:, 1], np.array([0, 0, 1])), # angle feat between eig2 and (0,0,1)
+            cos(eigvecs[:, 2], np.array([0, 0, 1]))  # angle feat between eig3 and (0,0,1)
+        ]
+        feat_list.append(feat)
     
-    return feat_matrix, neighbour_num_record
+    feat_list = np.array(feat_list)
+    return feat_list, neighbour_num_record
+
+def avgvec_vertic(points: np.ndarray, be_range: tuple, border: float):
+    '''
+    compute average angle cos of points in the square pillar area.
+    
+    params:
+    -
+    * points: all points of the scene
+    * be_range: start and end of the batch
+    * border: length of the border
+    '''
+    
+    from tqdm import tqdm
+    
+    feat_list = []
+    neighbour_num_record = []
+    
+    for query_idx in tqdm(range(be_range[0], be_range[1]), desc="eigval progress", total=be_range[1]-be_range[0], ncols=100):
+        query = points[query_idx]
+        # square_neighbours_mask = (np.abs(points[:, 0] - query[0]) < border / 2.0) & (np.abs(points[:, 1] - query[1]) < border / 2.0)
+        square_neighbours_mask = (np.abs(points - query) < border / 2.0).astype(np.int32).sum(axis=1) == 3
+        square_neighbours_mask[query_idx] = False
+        square_neighbours = points[square_neighbours_mask]
+        neighbour_num_record.append(len(square_neighbours))
+        
+        vec_cluster = square_neighbours - query
+        feat_list.append(1 - np.sqrt(1 - (cos_batch(vec_cluster, np.array([0.0, 0.0, 1.0])).mean())**2))
+    
+    feat_list = np.array(feat_list).reshape(-1, 1)
+    return feat_list, neighbour_num_record
 
 def pca_k(data: np.ndarray, k: int):
     '''
