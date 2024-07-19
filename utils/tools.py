@@ -64,6 +64,11 @@ def cos_batch(bat1: np.ndarray, bat2: np.ndarray):
     assert np.all(res_nml > 0)
     return res_dot / res_nml
 
+def sin_batch(bat1: np.ndarray, bat2: np.ndarray):
+    cos_batch_result = cos_batch(bat1, bat2)
+    assert not np.all(np.isnan(cos_batch_result))
+    return np.sqrt(1 - cos_batch_result**2)
+
 def variance(seq: list):
     n = len(seq)
     assert n > 0, "sequence length must be positive"
@@ -328,3 +333,18 @@ def npy2o3d(data: np.ndarray):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(data)
     return pcd
+
+def radius_filter(points: np.ndarray, radius: float, threshold: int):
+    mask = np.ones(len(points), dtype=np.int32)
+    
+    search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
+    for query_idx, query in enumerate(points):
+        num, idx, _ = search_tree.search_radius_vector_3d(query, radius)
+        if num - 1 < threshold:
+            mask[query_idx] = 0
+    
+    return mask == 1
+
+def o3d_dbscan(points: np.ndarray, radius: float, min_threshold: int):
+    search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
+    return np.array(search_tree.cluster_dbscan(eps=radius, min_points=min_threshold))
