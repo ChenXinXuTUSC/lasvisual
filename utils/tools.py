@@ -348,3 +348,56 @@ def radius_filter(points: np.ndarray, radius: float, threshold: int):
 def o3d_dbscan(points: np.ndarray, radius: float, min_threshold: int):
     search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
     return np.array(search_tree.cluster_dbscan(eps=radius, min_points=min_threshold))
+
+
+def npnorm(x: np.ndarray):
+    norm = np.linalg.norm(x)
+    if norm == 0:
+        return x
+    return x / norm
+
+def project_to_plane(points: np.ndarray, vecn: np.ndarray, wup: np.ndarray):
+    vecn_nml = npnorm(vecn) # normalization
+    points_nml = points - points.mean()
+    proj_mat = np.eye(3) - np.outer(vecn_nml, vecn_nml.T) # projection matrix
+    
+    # to 3d plane
+    points_proj = points_nml @ proj_mat.T
+    points_dist = points_nml @ vecn_nml
+    
+    # to 2d plane
+    plane_x = npnorm(np.cross(vecn, wup))
+    plane_y = npnorm(np.cross(vecn, plane_x))
+    proj_mat = np.concatenate(
+        [
+            plane_x.reshape(-1, 1),
+            plane_y.reshape(-1, 1)
+        ],
+        axis=1
+    )
+    
+    points_proj = points_proj @ proj_mat
+    
+    return points_proj, np.abs(points_dist)
+
+def rasterize(points: np.ndarray, info: np.ndarray, grid_size: float):
+    assert len(points.shape) == 2 and points.shape[1] == 2, f"no a plane scatter shape {points.shape}, expected (n,2)"
+    min_coord = points.min(axis=0)
+    max_coord = points.max(axis=0)
+    grid_numaxis = ((max_coord - min_coord) // grid_size).astype(np.int32) + 1
+    grid_indices = ((points - min_coord) // grid_size).astype(np.int32)
+    
+    image_densit = np.zeros(tuple(list(grid_numaxis)))
+    image_height = np.zeros(tuple(list(grid_numaxis)))
+    for idx, coord in enumerate(grid_indices):
+        image_height[coord[0], coord[1]] += info[idx]
+        image_densit[coord[0], coord[1]] += 1
+    
+    image_height = image_height / image_densit
+    image_densit = image_densit / image_densit.max()
+    image_height = image_height / image_height.max()
+    
+    image_densit = np.nan_to_num(image_densit, nan=0, posinf=1, neginf=-1)
+    image_height = np.nan_to_num(image_height, nan=0, posinf=1, neginf=-1)
+
+    return image_densit, image_height, grid_indices
