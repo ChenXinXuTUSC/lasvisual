@@ -381,7 +381,7 @@ def project_to_plane(points: np.ndarray, vecn: np.ndarray, wup: np.ndarray):
     return points_proj, np.abs(points_dist)
 
 def rasterize(points: np.ndarray, info: np.ndarray, grid_size: float):
-    assert len(points.shape) == 2 and points.shape[1] == 2, f"no a plane scatter shape {points.shape}, expected (n,2)"
+    assert len(points.shape) == 2 and points.shape[1] == 2, f"not a plane scatter shape {points.shape}, expected (n,2)"
     min_coord = points.min(axis=0)
     max_coord = points.max(axis=0)
     grid_numaxis = ((max_coord - min_coord) // grid_size).astype(np.int32) + 1
