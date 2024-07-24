@@ -1,6 +1,11 @@
 import numpy as np
 import open3d as o3d
 
+def shuffle_along_axis(data: np.ndarray, axis: int):
+    assert axis >= 0 and axis < len(data.shape)
+    idx = np.random.rand(*data.shape).argsort(axis=axis)
+    return np.take_along_axis(data,idx,axis=axis)
+
 def cos(vec1: np.ndarray, vec2: np.ndarray):
     '''
     compute the cosine angle of two vector list
@@ -61,12 +66,12 @@ def cos_batch(bat1: np.ndarray, bat2: np.ndarray):
     
     res_dot = np.dot(bat1, bat2.T)
     res_nml = np.linalg.norm(bat1, axis=1).reshape(1, -1).T @ np.linalg.norm(bat2, axis=1).reshape(1, -1)
-    assert np.all(res_nml > 0)
+    
     return res_dot / res_nml
 
 def sin_batch(bat1: np.ndarray, bat2: np.ndarray):
     cos_batch_result = cos_batch(bat1, bat2)
-    assert not np.all(np.isnan(cos_batch_result))
+    assert not np.all(np.isnan(cos_batch_result)), f"error with {np.isnan(cos_batch_result).astype(np.int32).sum()}, {bat1}"
     return np.sqrt(1 - cos_batch_result**2)
 
 def variance(seq: list):
@@ -394,10 +399,74 @@ def rasterize(points: np.ndarray, info: np.ndarray, grid_size: float):
         image_densit[coord[0], coord[1]] += 1
     
     image_height = image_height / image_densit
-    image_densit = image_densit / image_densit.max()
+    np.nan_to_num(image_height, copy=False, nan=0.0, posinf=1.0, neginf=0.0)
     image_height = image_height / image_height.max()
+    image_densit = image_densit / image_densit.max()
+    np.nan_to_num(image_densit, copy=False, nan=0.0, posinf=1.0, neginf=0.0)
     
-    image_densit = np.nan_to_num(image_densit, nan=0, posinf=1, neginf=-1)
-    image_height = np.nan_to_num(image_height, nan=0, posinf=1, neginf=-1)
-
     return image_densit, image_height, grid_indices
+
+def aabb_draw_meta(data):
+    assert isinstance(data, np.ndarray) or isinstance(data, o3d.geometry.PointCloud)
+
+    o3dpcd = None
+    if isinstance(data, np.ndarray):
+        assert len(data.shape) == 2
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(data)
+        o3dpcd = pcd
+    else:
+        o3dpcd = data
+    
+    aabb = o3dpcd.get_axis_aligned_bounding_box()
+    # print(aabb.get_min_bound(), aabb.get_max_bound())
+    bbox_vtx_list = np.asarray(aabb.get_box_points())
+
+    center = bbox_vtx_list.mean(axis=0)
+
+    bbox_vtx_list = bbox_vtx_list - center
+
+    # draw_sequence = [
+    #     [[0, 0, 0], [0, 0, 1]],
+    #     [[0, 0, 1], [0, 1, 1]],
+    #     [[0, 1, 1], [0, 1, 0]],
+    #     [[0, 1, 0], [0, 0, 0]],
+    #     [[1, 0, 0], [1, 0, 1]],
+    #     [[1, 0, 1], [1, 1, 1]],
+    #     [[1, 1, 1], [1, 1, 0]],
+    #     [[1, 1, 0], [1, 0, 0]],
+    
+    #     [[0, 0, 0], [1, 0, 0]],
+    #     [[0, 0, 1], [1, 0, 1]],
+    #     [[0, 1, 1], [1, 1, 1]],
+    #     [[0, 1, 0], [1, 1, 0]],
+    # ]
+
+    draw_sequence = [
+        [0, 1],
+        [1, 3],
+        [3, 2],
+        [2, 0],
+        [4, 5],
+        [5, 7],
+        [7, 6],
+        [6, 4],
+
+        [0, 4],
+        [1, 5],
+        [3, 7],
+        [2, 6]
+    ]
+
+    selection_base = np.hstack([np.abs(bbox_vtx_list[0]).reshape(-1, 1), -np.abs(bbox_vtx_list[0]).reshape(-1, 1)])
+
+    bbox_points = []
+    for i in range(8):
+        idx = [int(x) for x in bin(i)[2:].zfill(3)]
+        bbox_points.append([
+            selection_base[0][idx[0]],
+            selection_base[1][idx[1]],
+            selection_base[2][idx[2]]
+        ])
+    
+    return np.array(bbox_points + center), np.array(draw_sequence)
