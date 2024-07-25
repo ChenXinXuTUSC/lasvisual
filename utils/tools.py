@@ -354,7 +354,7 @@ def o3d_dbscan(points: np.ndarray, radius: float, min_threshold: int):
     search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
     return np.array(search_tree.cluster_dbscan(eps=radius, min_points=min_threshold))
 
-
+# other tools
 def npnorm(x: np.ndarray):
     norm = np.linalg.norm(x)
     if norm == 0:
@@ -470,3 +470,13 @@ def aabb_draw_meta(data):
         ])
     
     return np.array(bbox_points + center), np.array(draw_sequence)
+
+def join_struct_arrays(arrays):
+    sizes = np.array([a.itemsize for a in arrays if a is not None]) # 每个结构化张量中单个元素数据字节数
+    offsets = np.r_[0, sizes.cumsum()] # 合并每个结构化张量后单个元素数据字节数序列
+    n = len(arrays[0]) # 要求拼接的多个张量具有相同数量的元素数量，这是水平拼接
+    joint = np.empty((n, offsets[-1]), dtype=np.uint8)
+    for a, size, offset in zip(arrays, sizes, offsets):
+        joint[:,offset:offset+size] = a.view(np.uint8).reshape(n,size)
+    dtype = sum((a.dtype.descr for a in arrays if a is not None), [])
+    return joint.ravel().view(dtype)
