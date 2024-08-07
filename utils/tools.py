@@ -1,6 +1,9 @@
 import numpy as np
 import open3d as o3d
 
+from tqdm import tqdm
+
+# algorithm related
 def shuffle_along_axis(data: np.ndarray, axis: int):
     assert axis >= 0 and axis < len(data.shape)
     idx = np.random.rand(*data.shape).argsort(axis=axis)
@@ -321,6 +324,83 @@ def cluster_instanced(points: np.ndarray, border_len: float, min_threshold: int)
             instanced_labels[square_selection_mask] = instanced_counts
             instanced_counts += 1
     return instanced_labels
+
+def pipe2st(
+    points: np.ndarray,
+    voxel_size: float,
+    stage1_radius: float,
+    stage2_border: float,
+    stage1_thresh: float=0.7,
+    stage2_thresh: float=0.3
+):
+    '''
+    Perform filtration with a two-stage pipeline, one PCA and one statistical.
+
+    Params:
+    - points (np.ndarray): [n, 3] xyz coordinates
+    - voxel_size (float): voxel size for voxel downsample
+    - stage1_radius (float): search radius of sphere neighbour to perform PCA
+    - stage2_border (float): search border of square neighbour to perform statistic
+
+    Return:
+    - points (np.ndarray): [n, 3] xyz coordinates after clustered
+    - labels (np.ndarray): [n,] cluster labels of each point
+    '''
+    
+    # voxel downsample
+    points, _, _, _ = voxel_downsample(points, voxel_size, use_avg=False)
+    
+    # do the stage 1
+    stage1_feat_list = []
+    search_tree = o3d.geometry.KDTreeFlann(npy2o3d(points))
+    for query_idx in tqdm(range(len(points)), total=len(points), ncols=100):
+        query = points[query_idx]
+        neighbour_num, neighbour_idx_list, _ = search_tree.search_radius_vector_3d(query, stage1_radius)
+        if neighbour_num <= 3:
+            stage1_feat_list.append([0.0, 0.0])
+            continue
+        eigvals, eigvecs = pca_k(points[neighbour_idx_list], 3)
+        assert eigvals[0] >= eigvals[1] and eigvals[1] >= eigvals[2]
+        feat = np.array([
+            (eigvals[0] - eigvals[1]) / (eigvals[0] + 1e-9),
+            (eigvals[1] - eigvals[2]) / (eigvals[1] + 1e-9)
+        ])
+        feat = feat / feat.sum()
+        stage1_feat_list.append(feat)
+    stage1_feat_list = np.array(stage1_feat_list)
+    
+    # do the stage 2
+    stage2_feat_list = []
+    for query_idx in tqdm(range(len(points)), total=len(points), ncols=100):
+        query = points[query_idx]
+        mask = (
+            (np.abs(points[:, 0] - query[0]) < stage2_border / 2.0) &
+            (np.abs(points[:, 1] - query[1]) < stage2_border / 2.0) &
+            (np.abs(points[:, 2] - query[2]) < stage2_border)
+        )
+        mask[query_idx] = False
+        vicinity = points[mask]
+        if len(vicinity) < 3:
+            stage2_feat_list.append(0.0)
+            continue
+        
+        feat = (1.0 - sin_batch(points[mask] - query, np.array([0, 0, 1]))).mean()
+        stage2_feat_list.append(feat)
+    stage2_feat_list = np.array(stage2_feat_list)
+
+    # do the filtration
+    mask1 = (stage1_feat_list[:, 1] > stage1_thresh)
+    mask2 = (stage2_feat_list > stage2_thresh)
+    mask_filtered = mask1 & mask2
+    points_filtered = points[mask_filtered]
+    mask_denoised = radius_filter(points_filtered, 0.2, 20)
+    points_denoised = points_filtered[mask_denoised] 
+
+    # do the dbscan cluster
+    cluster_label = np.array(npy2o3d(points_denoised).cluster_dbscan(eps=0.20, min_points=30))
+    
+    return points_denoised, cluster_label
+
 
 # some commonly used conversions
 def npy2o3d(data: np.ndarray):
